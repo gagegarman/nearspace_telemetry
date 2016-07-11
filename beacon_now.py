@@ -6,14 +6,14 @@ import logging
 logging.basicConfig(filename='/home/pi/aprs-beacon.log',level=logging.DEBUG)
 # Stop the serial port service for /dev/ttyAMA0.
 # Perform a kissattach operation and assign an IP address for waht its worth.
-# Open a serial port to read GPS data. Start a reader thread.
-# Open a reader thread to read on AX listen. When we get specific
-# commands, take various actions.
-# When we get a goo location parsed out of the GPS stream,
-# Transmit it using the beacon program.
+# Open a serial port to read GPS data. This is done in /etc/init.d/setup-beacon.
+# When we get a good location parsed out of the GPS stream, transmit it using 
+# the beacon program (from AX-25 tools).
 
-message = str(datetime.datetime.now())
-logging.info('beacon-now: writing message: ' + message)
+dateTime = str(datetime.datetime.now())
+message = 'beacon-now: writing message: ' + dateTime
+print message
+logging.info(message)
 
 import serial
 
@@ -36,17 +36,20 @@ def parseGps(nmeaLocation):
     sep = fields[11]
     # Format the location string:
     location = '@' + utcHHMMSS + 'h' + lat + nS + '/' + lon + eW + '_' + alt
+    # Include position fix, satellite count, horizontal dilution of precision 
+    # and geoidal separation in the comment section of the APRS string.  
     comment = '/fx:' + fix + ',st:' + sat + ',dp:' + hdop + ',sp:' + sep
     location += comment
     return location
 
 
+# GPS serial port, this needs to be configured per the GPS module's spec. 
 sp = serial.Serial('/dev/ttyUSB0', 9600, timeout=5)
 location = None
 newLocation = None
 
 for i in range(10):
-    gps = sp.read(1024)
+    gps = sp.read(1024) # Read 1024 bytes from the GPS serial stream.
     gps = gps.split('\n')
     for s in gps:
         try:
@@ -54,7 +57,8 @@ for i in range(10):
                 print s
                 # Parse fields:
                 newLocation = parseGps(s)
-                # Keep storing the new location as long as it is valid.
+                # Keep storing the new location as long as it is valid, so we
+                # get the most recent location from the gps string.
                 location = newLocation
         except Exception, e:
             print e
@@ -67,6 +71,7 @@ for i in range(10):
 
 print location
 if location != None:
+    # Log the location and send the APRS string via beacon.
     logging.info('beacon-now, GPS data: ' + location)
     ret = call(["/usr/sbin/beacon", "-s", "-d BEACON", "1", location])
 # Check the return code of beacon?
