@@ -3,12 +3,14 @@
 from subprocess import call
 import datetime
 import logging
-
 logging.basicConfig(filename='/home/pi/aprs-beacon.log',level=logging.DEBUG)
-# Open a serial port to read GPS data, parse the GGA string and beacon it.
-# TODO:
-# Read the last line appended to the received packet log for AX listen.
-# When we get specific commands, take various actions. 
+# Stop the serial port service for /dev/ttyAMA0.
+# Perform a kissattach operation and assign an IP address for waht its worth.
+# Open a serial port to read GPS data. Start a reader thread.
+# Open a reader thread to read on AX listen. When we get specific
+# commands, take various actions.
+# When we get a goo location parsed out of the GPS stream,
+# Transmit it using the beacon program.
 
 message = str(datetime.datetime.now())
 logging.info('beacon-now: writing message: ' + message)
@@ -29,7 +31,7 @@ def parseGps(nmeaLocation):
     fix = fields[6]
     sat = str(int(fields[7])) # Number of satellites used 0 to 12
     hdop = fields[8]
-    # Put altitude in the actual message.
+    # Put Altitude in the actual message.
     alt = str(int(float(fields[9])))
     sep = fields[11]
     # Format the location string:
@@ -39,41 +41,37 @@ def parseGps(nmeaLocation):
     return location
 
 
-sp = serial.Serial('/dev/ttyUSB0', 9600)
-gps = sp.read(1024)
-gps = gps.split('\n')
-
+sp = serial.Serial('/dev/ttyUSB0', 9600, timeout=5)
 location = None
-prevLocation = None
+newLocation = None
 
-for s in gps:
-    try:
-        if s.startswith('$GPGGA'):
-            print s
-            # Parse fields:
-            prevLocation = parseGps(s)
-            # Keep storing the new location as long as it is valid.
-            location = prevLocation
-    except Exception, e:
-        print e
+for i in range(10):
+    gps = sp.read(1024)
+    gps = gps.split('\n')
+    for s in gps:
+        try:
+            if s.startswith('$GPGGA'):
+                print s
+                # Parse fields:
+                newLocation = parseGps(s)
+                # Keep storing the new location as long as it is valid.
+                location = newLocation
+        except Exception, e:
+            print e
+    if location is not None:
+        break
+    else:
+        message = 'Location not initialized, retry: ' + str(i)
+        print message
+        logging.warning('beacon-now: ' + message)
 
 print location
 if location != None:
     logging.info('beacon-now, GPS data: ' + location)
     ret = call(["/usr/sbin/beacon", "-s", "-d BEACON", "1", location])
-    # Check the return code of beacon?
+# Check the return code of beacon?
 else:
     message = 'Failed to parse GPS GPGGA string for location information.'
     print message
     logging.warning('beacon-now: ' + message)
-
-
-# Output should look something like:
-"""
-$GPGGA,045435.000,4401.9799,N,12307.2442,W,2,10,0.83,164.5,M,-21.4,M,0000,0000*50
-$GPGGA,045436.000,4401.9799,N,12307.2442,W,2,10,0.83,164.5,M,-21.4,M,0000,0000*53
-$GPGGA,045437.000,4401.9799,N,12307.2442,W,2,10,0.83,164.5,M,-21.4,M,0000,0000*52
-@045437h4401.97N/12307.24W_164/fx:2,st:10,dp:0.83,sp:-21.4
-"""
-
 
