@@ -1,4 +1,4 @@
-Bacon Setup
+Beacon Setup
 ===========
 
 Configure init Script:
