@@ -24,10 +24,10 @@ To install and start rcconf on Ubuntu or Debian:
     sudo rcconf
 
 
-"Install" beacon-now.py
+"Install" beacon_now.py
 -----------------------
 
-Put beacon-now.py in the home folder, ensure it is executable.
+Put beacon_now.py in the home folder, ensure it is executable.
 
 Configure the script per the GPS module's interface (assuming some kind of 
 serial port), port name, baud rate, timeout, etc..
@@ -44,5 +44,5 @@ Setup a cron job to execute it periodically, e.g. every minute:
     # For more information see the manual pages of crontab(5) and cron(8)
     #
     # m h  dom mon dow   command
-    * * * * *  /home/pi/beacon-now.py
+    * * * * *  /home/pi/beacon_now.py
 
