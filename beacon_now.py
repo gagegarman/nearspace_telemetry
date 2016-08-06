@@ -85,7 +85,7 @@ def parseGps(nmeaLocation):
         pascals = sensor.read_pressure()
         pressure = int(pascals / 10)
         humidity = int(sensor.read_humidity())
-        logAndPrint('Deg C: ' + str(degrees) + ', mBar: ' + str(pressure) \
+        logAndPrint('Deg F: ' + str(degrees) + ', mBar: ' + str(pressure) \
             + ', Hum: ' + str(humidity), 0)
 
         # 000g001t071r000p000P000b10160h64.comment
