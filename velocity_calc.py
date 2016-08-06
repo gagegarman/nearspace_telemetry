@@ -101,9 +101,10 @@ while True:
             try:
                 location = getGpsLocation(gpsString) # Parse the GPS data.
             except Exception, e:
-                print e, 'retry: ', i
+                logAndPrint('Exception: ' + str(e), 1)
             if location != None:
                 break
+            logAndPrint('Retry: ' + str(i), 1)
         sp.close() 
         beacon_lock_socket.shutdown(socket.SHUT_RDWR)
         beacon_lock_socket.close()
@@ -119,6 +120,7 @@ while True:
                 dX = location[0] - prev_location[0]
                 dY = location[1] - prev_location[1]
                 dZ = location[2] - prev_location[2]
+                logAndPrint('(dx, dy, dz): (' + str(dX) + ', ' + str(dY) + ', ' +str(dZ)+')', 0)
                 delta_distance += math.sqrt(math.pow(dX, 2) + math.pow(dY, 2) + math.pow(dZ, 2))
                 logAndPrint('Calculated distance delta: ' + str(delta_distance), 0)
             prev_location = location
@@ -127,11 +129,14 @@ while True:
                 ret = call(['/home/pi/beacon_now.py'])
                 logAndPrint('Beacon_now return code: ' + str(ret), 0)
                 delta_distance = 0.0
-    except Exception, e:
-        logAndPrint('The lock exists, or other error, try again later.', 1)
-        logAndPrint('Exception: ' + str(e), 1)
+    except socket.error:
+        logAndPrint('The lock exists, try again later.', 1)
         beacon_lock_socket.shutdown(socket.SHUT_RDWR)
         beacon_lock_socket.close()
+    except Exception, e:
+        logAndPrint('Other error, try again later.', 1)
+        logAndPrint('Exception: ' + str(e), 1)
+        
     print 'Sleeping for 10 seconds.' # Don't log this.
     time.sleep(10)
 
