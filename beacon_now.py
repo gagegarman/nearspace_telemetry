@@ -40,7 +40,7 @@ except socket.error:
 
 from subprocess import call
 import datetime
-from BME280 import *
+import BME280
 
 # Stop the serial port service for /dev/ttyAMA0. Perform a kissattach operation
 # and assign an IP address for waht it's worth. This is done on startup in:
@@ -79,14 +79,14 @@ def parseGps(nmeaLocation):
     else:
         # Every other minute, include the themperature, pressure, and humidity.
         # Complete Weather Report Format - with Lat/Long position and Timestamp:
-        sensor = BME280(mode=BME280_OSAMPLE_8)
+        sensor = BME280.BME280(mode=BME280.BME280_OSAMPLE_8)
         degrees = int(sensor.read_temperature())
         degrees = int(degrees * (9.0 / 5) + 32) # Celsius to Fahrenheit.
         pascals = sensor.read_pressure()
         pressure = int(pascals / 10)
         humidity = int(sensor.read_humidity())
-        logAndPrint('Deg C: ' + str(degrees) + 'mBar: ' + str(pressure) \
-            + 'Hum: ' + str(humidity), 0)
+        logAndPrint('Deg C: ' + str(degrees) + ', mBar: ' + str(pressure) \
+            + ', Hum: ' + str(humidity), 0)
 
         # 000g001t071r000p000P000b10160h64.comment
         comment = '/000g000t{:03d}'.format(degrees) + 'r000p000P000'
