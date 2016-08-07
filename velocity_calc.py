@@ -5,6 +5,10 @@ import sys
 
 PROGRAM_NAME = 'velocity_calc'
 
+# Distance threshold. 
+THRESHOLD = 150 # meters (low number for testing, 150 seems good for flight)
+WAKEUP_INTERVAL = 15 # Seconds. Make this a number wont collide with 60 seconds.
+
 # Check to see if python script is running
 global prog_lock_socket   # Without this our lock gets garbage collected
 prog_lock_socket = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
@@ -37,7 +41,6 @@ logging.basicConfig(filename='/home/pi/_velocity_calc.log', level=logging.DEBUG)
 # If the distance is greater than some threshold, then call beacon_now to 
 # broadcast our position.
 
-THRESHOLD = 5 # meters (low number for testing)
 delta_distance = 0.0
 prev_location = None
 
@@ -122,7 +125,8 @@ while True:
                 dZ = location[2] - prev_location[2]
                 logAndPrint('(dx, dy, dz): (' + str(dX) + ', ' + str(dY) + ', ' +str(dZ)+')', 0)
                 delta_distance += math.sqrt(math.pow(dX, 2) + math.pow(dY, 2) + math.pow(dZ, 2))
-                logAndPrint('Calculated distance delta: ' + str(delta_distance), 0)
+                logAndPrint('Calculated distance delta: ' + str(delta_distance)
+                    + ', Threshold: ' + str(THRESHOLD), 0)
             prev_location = location
             if delta_distance > THRESHOLD:
                 logAndPrint('Delta distance > threshold, beaconing.', 0)
@@ -137,8 +141,8 @@ while True:
         logAndPrint('Other error, try again later.', 1)
         logAndPrint('Exception: ' + str(e), 1)
         
-    print 'Sleeping for 10 seconds.' # Don't log this.
-    time.sleep(10)
+    print 'Sleeping for', WAKEUP_INTERVAL, 'seconds.' # Don't log this.
+    time.sleep(WAKEUP_INTERVAL)
 
 
 logAndPrint('Program exiting, unhandled exception.', 2)
