@@ -25,6 +25,9 @@ def logAndPrint(message, level):
 
 # From: https://stackoverflow.com/questions/788411/check-to-see-if-python-script-is-running
 # Check to see if python script is running
+
+# Q4W - Does the log get created with unique mission file name each run? - or does it append append append
+# A -
 global lock_socket   # Without this our lock gets garbage collected
 lock_socket = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
 logging.basicConfig(filename='/home/pi/_beacon_now.log',level=logging.DEBUG)
@@ -41,12 +44,19 @@ except socket.error:
 from subprocess import call
 import datetime
 import BME280
+# Q4W - what is BME280 - Does this work with Dilleps sensor board? How does it know device location?
+# A -
 
 # Stop the serial port service for /dev/ttyAMA0. Perform a kissattach operation
 # and assign an IP address for waht it's worth. This is done on startup in:
 # /etc/init.d/setup_beacon.
 # Open a serial port to read GPS data. When we get a good location parsed out
 # of the GPS stream, transmit it using the beacon program (from AX-25 tools).
+#
+# Jeffrey added a line to transmit using http://www.midnightcheese.com/2015/12/super-simple-aprs-position-beacon/
+# The AFSK Library takes a properly formatted APRS message string as input and generates 
+# a Bell 202 AFSK audio sample and AFSK encoded APRS/AX.25 packet.
+# Audio goes out pi directly into Baofeng and VOX setting trigger transmission
 
 dateTime = str(datetime.datetime.now())
 logAndPrint('beacon_now: writing message: ' + dateTime, 0)
@@ -126,11 +136,24 @@ for i in range(10):
 sp.close()
 
 if location != None:
-    #location += 'Some custom message.'
+    # location += 'Some custom message.'
     # Log the location and send the APRS string via beacon.
     logAndPrint('APRS string: ' + str(location), 0)
-    ret = call(['/usr/sbin/beacon', '-s', '-d BEACON', '1', location])
-    logAndPrint('beacon return code: ' + str(ret), 0)
+    
+    # TODO Place 2 methods in if statements - 
+    # one can choose AX.25 method or AFSK method
+    
+    # Commented out Westons original code
+    # ret = call(['/usr/sbin/beacon', '-s', '-d BEACON', '1', location])
+    # logAndPrint('AX.25 Method: beacon return code: ' + str(ret), 0)
+    
+    ret = call(['/usr/sbin/aprs', '-c', 'KI7OKT', '-o packet.wav' location])
+    logAndPrint('AFSK Method: wav file creation return code: ' + str(ret), 0)
+    
+    ret = call(['/usr/sbin/aplay', 'packet.wav'])
+    logAndPrint('AFSK Method: packet.wav Beacon play return code: ' + str(ret), 0)
+    
+    
 else:
     logAndPrint('Failed to parse GPS GPGGA string for location information.', 0)
 
