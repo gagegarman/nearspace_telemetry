@@ -6,6 +6,8 @@
 # NOTES FOR EMS NSBT LAUNCH 3 (During 2017 Eclipse)
 # GPS device is on /dev/ttys0 baud rate is 9600
 # Dileeps Sensor board is on /dev/ttyACM0
+# TODO add code to write date/time stamped Sensor Board Data to a logfile
+# TODO Turn off the BME280 (we don't have that module)
 
 import sys
 import time
@@ -88,29 +90,32 @@ def parseGps(nmeaLocation):
     location = '@' + utcHHMMSS + 'h' + lat + nS + '/' + lon + eW + '_' + alt
     # Include position fix, satellite count, horizontal dilution of precision
     # and geoidal separation in the comment section of the APRS string.
+    comment = '/fx:' + fix + ',st:' + sat + ',dp:' + hdop + ',sp:' + sep
+    location += comment
+return location
     
     # Check Odd or Even Minute for just Telemetry or Telemetry and SensorData
     # TODO make this work for Dileeps Sensor Board
-    if int(utcHHMMSS[2:4]) % 2 == 0:
-        comment = '/fx:' + fix + ',st:' + sat + ',dp:' + hdop + ',sp:' + sep
-    else:
+    #if int(utcHHMMSS[2:4]) % 2 == 0:
+    #    comment = '/fx:' + fix + ',st:' + sat + ',dp:' + hdop + ',sp:' + sep
+    #else:
         # Every other minute, include the themperature, pressure, and humidity.
         # Complete Weather Report Format - with Lat/Long position and Timestamp:
-        sensor = BME280.BME280(mode=BME280.BME280_OSAMPLE_8)
-        degrees = int(sensor.read_temperature())
-        degrees = int(degrees * (9.0 / 5) + 32) # Celsius to Fahrenheit.
-        pascals = sensor.read_pressure()
-        pressure = int(pascals / 10)
-        humidity = int(sensor.read_humidity())
-        logAndPrint('Deg F: ' + str(degrees) + ', mBar: ' + str(pressure) \
-            + ', Hum: ' + str(humidity), 0)
+    #    sensor = BME280.BME280(mode=BME280.BME280_OSAMPLE_8)
+    #    degrees = int(sensor.read_temperature())
+    #    degrees = int(degrees * (9.0 / 5) + 32) # Celsius to Fahrenheit.
+    #    pascals = sensor.read_pressure()
+    #    pressure = int(pascals / 10)
+    #    humidity = int(sensor.read_humidity())
+    #    logAndPrint('Deg F: ' + str(degrees) + ', mBar: ' + str(pressure) \
+    #        + ', Hum: ' + str(humidity), 0)
 
         # 000g001t071r000p000P000b10160h64.comment
-        comment = '/000g000t{:03d}'.format(degrees) + 'r000p000P000'
-        comment += 'h{:02d}'.format(humidity) 
-        comment += 'b{:05d}'.format(pressure) + '.x-RPI'
-    location += comment
-    return location
+    #    comment = '/000g000t{:03d}'.format(degrees) + 'r000p000P000'
+    #    comment += 'h{:02d}'.format(humidity) 
+    #    comment += 'b{:05d}'.format(pressure) + '.x-RPI'
+    #location += comment
+    #return location
 
 
 # GPS serial port, this needs to be configured per the GPS module's spec.
