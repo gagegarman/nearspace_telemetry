@@ -57,10 +57,10 @@ import bme280
 # Open a serial port to read GPS data. When we get a good location parsed out
 # of the GPS stream, transmit it using the beacon program (from AX-25 tools).
 #
-# Jeffrey added a line to transmit using http://www.midnightcheese.com/2015/12/super-simple-aprs-position-beacon/
+# Jeffrey added code to transmit using http://www.midnightcheese.com/2015/12/super-simple-aprs-position-beacon/
 # The AFSK Library takes a properly formatted APRS message string as input and generates 
 # a Bell 202 AFSK audio sample and AFSK encoded APRS/AX.25 packet.
-# Audio goes out pi directly into Baofeng and VOX setting trigger transmission
+# Audio goes out pi directly into Baofeng and correct VOX settings will trigger transmission
 
 dateTime = str(datetime.datetime.now())
 logAndPrint('beacon_now: writing message: ' + dateTime, 0)
@@ -88,6 +88,9 @@ def parseGps(nmeaLocation):
     location = '@' + utcHHMMSS + 'h' + lat + nS + '/' + lon + eW + '_' + alt
     # Include position fix, satellite count, horizontal dilution of precision
     # and geoidal separation in the comment section of the APRS string.
+    
+    # Check Odd or Even Minute for just Telemetry or Telemetry and SensorData
+    # TODO make this work for Dileeps Sensor Board
     if int(utcHHMMSS[2:4]) % 2 == 0:
         comment = '/fx:' + fix + ',st:' + sat + ',dp:' + hdop + ',sp:' + sep
     else:
@@ -152,7 +155,7 @@ if location != None:
     # ret = call(['/usr/sbin/beacon', '-s', '-d BEACON', '1', location])
     # logAndPrint('AX.25 Method: beacon return code: ' + str(ret), 0)
     
-    ret = call(['/usr/local/bin/aprs', '-c', 'KI7OKT', '-o packet.wav', location])
+    ret = call(['/usr/local/bin/aprs', '-c', 'KI7OKT', '-o', 'packet.wav', location])
     logAndPrint('AFSK Method: wav file creation return code: ' + str(ret), 0)
     
     # Chirp w/ SOX if needed to trigger VOX
