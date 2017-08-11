@@ -3,6 +3,10 @@
 """Call from a cron job to broadcast the current position via APRS.
 """
 
+# NOTES FOR EMS NSBT LAUNCH 3 (During 2017 Eclipse)
+# GPS device is on /dev/ttys0 baud rate is 9600
+# Dileeps Sensor board is on /dev/ttyACM0
+
 import sys
 import time
 
@@ -107,7 +111,8 @@ def parseGps(nmeaLocation):
 
 
 # GPS serial port, this needs to be configured per the GPS module's spec.
-sp = serial.Serial('/dev/ttyUSB0', 9600, timeout=5)
+# sp = serial.Serial('/dev/ttyUSB0', 9600, timeout=5)
+sp = serial.Serial('/dev/ttys0', 9600, timeout=5)
 newLocation = None
 
 for i in range(10):
@@ -150,7 +155,10 @@ if location != None:
     ret = call(['/usr/sbin/aprs', '-c', 'KI7OKT', '-o packet.wav' location])
     logAndPrint('AFSK Method: wav file creation return code: ' + str(ret), 0)
     
-    ret = call(['/usr/sbin/aplay', 'packet.wav'])
+    # Chirp w/ SOX if needed to trigger VOX
+    # call(['usr/sbin/play', '-n synth 0.05 tri 1000.0'])
+    
+    ret = call(['/usr/sbin/play', 'packet.wav'])
     logAndPrint('AFSK Method: packet.wav Beacon play return code: ' + str(ret), 0)
     
     
