@@ -47,7 +47,7 @@ except socket.error:
 
 from subprocess import call
 import datetime
-import BME280
+import bme280
 # Q4W - what is BME280 - Does this work with Dilleps sensor board? How does it know device location?
 # A -
 
@@ -112,7 +112,7 @@ def parseGps(nmeaLocation):
 
 # GPS serial port, this needs to be configured per the GPS module's spec.
 # sp = serial.Serial('/dev/ttyUSB0', 9600, timeout=5)
-sp = serial.Serial('/dev/ttys0', 9600, timeout=5)
+sp = serial.Serial('/dev/ttyS0', 9600, timeout=5)
 newLocation = None
 
 for i in range(10):
