@@ -152,7 +152,7 @@ if location != None:
     # ret = call(['/usr/sbin/beacon', '-s', '-d BEACON', '1', location])
     # logAndPrint('AX.25 Method: beacon return code: ' + str(ret), 0)
     
-    ret = call(['/usr/sbin/aprs', '-c', 'KI7OKT', '-o packet.wav' location])
+    ret = call(['/usr/sbin/aprs', '-c', 'KI7OKT', '-o packet.wav', location])
     logAndPrint('AFSK Method: wav file creation return code: ' + str(ret), 0)
     
     # Chirp w/ SOX if needed to trigger VOX
